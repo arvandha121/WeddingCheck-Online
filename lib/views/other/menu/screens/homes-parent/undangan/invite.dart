@@ -153,23 +153,6 @@ class _InvitationPageState extends State<InvitationPage> {
                                     ),
                                   ),
                                 ),
-                                // SizedBox(height: 10),
-                                // if (_listItem.nohp != "-")
-                                //   Container(
-                                //     width: double.infinity,
-                                //     height: 50,
-                                //     child: ElevatedButton(
-                                //       onPressed: _shareViaWhatsApp,
-                                //       child: Text('Kirim via WhatsApp'),
-                                //       style: ElevatedButton.styleFrom(
-                                //         backgroundColor: Colors.green,
-                                //         shape: RoundedRectangleBorder(
-                                //           borderRadius:
-                                //               BorderRadius.circular(8),
-                                //         ),
-                                //       ),
-                                //     ),
-                                //   ),
                               ],
                             )
                       : Container(),

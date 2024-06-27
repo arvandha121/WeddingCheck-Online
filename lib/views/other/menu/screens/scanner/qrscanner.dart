@@ -125,35 +125,63 @@ class _QRScannerState extends State<QRScanner> {
     }
   }
 
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Konfirmasi'),
+            content: Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('Tidak'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(
+                  'Iya',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        )) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          QRView(
-            key: qrKey,
-            onQRViewCreated: _onQRViewCreated,
-            overlay: QrScannerOverlayShape(
-              borderColor: Colors.red,
-              borderRadius: 10,
-              borderLength: 30,
-              borderWidth: 10,
-              cutOutSize: 300,
-            ),
-          ),
-          Positioned(
-            right: 10,
-            bottom: 10,
-            child: FloatingActionButton(
-              onPressed: _toggleFlash,
-              child: Icon(
-                isFlashOn ? Icons.flash_off : Icons.flash_on,
-                color: Colors.white,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        body: Stack(
+          children: [
+            QRView(
+              key: qrKey,
+              onQRViewCreated: _onQRViewCreated,
+              overlay: QrScannerOverlayShape(
+                borderColor: Colors.red,
+                borderRadius: 10,
+                borderLength: 30,
+                borderWidth: 10,
+                cutOutSize: 300,
               ),
-              backgroundColor: isFlashOn ? Colors.yellow[700] : Colors.black54,
             ),
-          ),
-        ],
+            Positioned(
+              right: 10,
+              bottom: 10,
+              child: FloatingActionButton(
+                onPressed: _toggleFlash,
+                child: Icon(
+                  isFlashOn ? Icons.flash_off : Icons.flash_on,
+                  color: Colors.white,
+                ),
+                backgroundColor:
+                    isFlashOn ? Colors.yellow[700] : Colors.black54,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -94,7 +94,7 @@ class _HomesParentState extends State<HomesParent> {
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Konfirmasi Keluar'),
+            title: Text('Konfirmasi'),
             content: Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
             actions: <Widget>[
               TextButton(
