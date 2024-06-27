@@ -302,7 +302,7 @@ class _SettingsState extends State<Settings> {
               title: Text('Hapus List'),
               subtitle: Text('Menghapus semua list tamu yang dipilih'),
               onTap: () => _showDeleteConfirmationDialog(context, textColor),
-              tileColor: Theme.of(context).cardColor, // Adjusted for theme
+              tileColor: Theme.of(context).cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
