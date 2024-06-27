@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weddingcheck/app/database/dbHelper.dart';
 import 'package:weddingcheck/app/model/users.dart';
-import 'package:weddingcheck/views/homepage.dart';
 import 'package:weddingcheck/views/auth/loginscreen.dart';
 
 class Register extends StatefulWidget {
@@ -27,13 +25,17 @@ class _RegisterState extends State<Register> {
   final formKey = GlobalKey<FormState>();
 
   final db = DatabaseHelper();
+
   register() async {
     if (formKey.currentState!.validate()) {
       try {
         await db.register(
           Users(
-              usrName: usernameController.text,
-              usrPassword: passwordController.text),
+            usrName: usernameController.text,
+            usrPassword: passwordController.text,
+            role: 'pegawai', // Set role to 'pegawai'
+            isVerified: 0, // Set isVerified to 0 (not verified)
+          ),
         );
         Navigator.pushReplacement(
           context,
@@ -43,13 +45,13 @@ class _RegisterState extends State<Register> {
         );
         Get.snackbar(
           "Success",
-          "Item created successfully",
+          "Account created successfully. Please wait for admin verification.",
           snackPosition: SnackPosition.BOTTOM,
         );
       } catch (e) {
         Get.snackbar(
           "Error",
-          "Failed to create item: $e",
+          "Failed to create account: $e",
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -217,7 +219,7 @@ class _RegisterState extends State<Register> {
                                 register();
                                 Get.snackbar(
                                   "Register",
-                                  "Berhasil membuat akun",
+                                  "Berhasil membuat akun. Silakan tunggu verifikasi admin.",
                                   snackPosition: SnackPosition.BOTTOM,
                                   backgroundColor: Colors.white,
                                   colorText: Colors.black,

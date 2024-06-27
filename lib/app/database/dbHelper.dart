@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:weddingcheck/app/model/listItem.dart';
 import 'package:weddingcheck/app/model/parentListItem.dart';
 import 'package:weddingcheck/app/model/users.dart';
-// Update this path to where your ListItem model is located
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -36,9 +35,19 @@ class DatabaseHelper {
       CREATE TABLE users (
         usrId INTEGER PRIMARY KEY AUTOINCREMENT,
         usrName TEXT UNIQUE,
-        usrPassword TEXT
+        usrPassword TEXT,
+        role TEXT,
+        isVerified INTEGER DEFAULT 0
       );
     ''');
+
+    // Insert default admin user
+    await db.insert('users', {
+      'usrName': 'admin',
+      'usrPassword': 'password',
+      'role': 'admin',
+      'isVerified': 1,
+    });
 
     // Create list table children list (tamu)
     await db.execute('''
@@ -76,7 +85,7 @@ class DatabaseHelper {
   Future<bool> login(Users user) async {
     final db = await database;
     var result = await db.rawQuery(
-      "SELECT * FROM users WHERE usrName = '${user.usrName}' AND usrPassword = '${user.usrPassword}'",
+      "SELECT * FROM users WHERE usrName = '${user.usrName}' AND usrPassword = '${user.usrPassword}' AND isVerified = 1",
     );
 
     return result.isNotEmpty;
@@ -92,6 +101,41 @@ class DatabaseHelper {
     var res =
         await db.query("users", where: "usrName = ?", whereArgs: [usrName]);
     return res.isNotEmpty ? Users.fromMap(res.first) : null;
+  }
+
+  Future<int> updateUserVerification(int id, int isVerified) async {
+    final db = await database;
+    return db.update(
+      'users',
+      {'isVerified': isVerified},
+      where: 'usrId = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<Users>> getAllUsers() async {
+    final db = await database;
+    var result = await db.query('users');
+    return result.map((map) => Users.fromMap(map)).toList();
+  }
+
+  Future<int> updateUser(Users user) async {
+    final db = await database;
+    return db.update(
+      'users',
+      user.toMap(),
+      where: 'usrId = ?',
+      whereArgs: [user.usrId],
+    );
+  }
+
+  Future<int> deleteUser(int id) async {
+    final db = await database;
+    return db.delete(
+      'users',
+      where: 'usrId = ?',
+      whereArgs: [id],
+    );
   }
 
   // List-related operations

@@ -7,6 +7,7 @@ import 'package:weddingcheck/views/other/appbar/appbar.dart';
 import 'package:weddingcheck/views/other/menu/bottomnavbar.dart';
 import 'package:weddingcheck/views/other/menu/screens/homes-child/homes.dart';
 import 'package:weddingcheck/views/other/menu/screens/homes-parent/homes.dart';
+import 'package:weddingcheck/views/other/menu/screens/management/management.dart';
 import 'package:weddingcheck/views/other/menu/screens/scanner/qrscanner.dart';
 import 'package:weddingcheck/views/other/menu/screens/settings/settings.dart';
 
@@ -21,18 +22,6 @@ class _HomePageState extends State<HomePage> {
   List<ListItem> items = [];
   late int selectedIndex;
 
-  List showWidgets = [
-    Center(
-      child: HomesParent(),
-    ),
-    Center(
-      child: QRScanner(),
-    ),
-    Center(
-      child: Settings(),
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -41,10 +30,32 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final role = Provider.of<UiProvider>(context).role;
+
+    List<Widget> filteredWidgets = [
+      Center(
+        child: HomesParent(),
+      ),
+      Center(
+        child: QRScanner(),
+      ),
+      if (role == 'admin')
+        Center(
+          child: Management(),
+        ),
+      Center(
+        child: Settings(),
+      ),
+    ];
+
+    // Ensure the selected index is within the range of filteredWidgets
+    if (selectedIndex >= filteredWidgets.length) {
+      selectedIndex = 0;
+    }
+
     return Scaffold(
       appBar: MyAppBar(),
-      // drawer: MyDrawer(),
-      body: showWidgets[selectedIndex],
+      body: filteredWidgets[selectedIndex],
       bottomNavigationBar: MyBottomNavBar(
         currentIndex: selectedIndex,
         onTap: (value) {
@@ -52,6 +63,7 @@ class _HomePageState extends State<HomePage> {
             selectedIndex = value;
           });
         },
+        role: role,
       ),
     );
   }

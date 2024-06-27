@@ -30,8 +30,77 @@ class _LoginState extends State<Login> {
 
   final db = DatabaseHelper();
 
+  void _showVerificationAlert() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Verification Required'),
+          content: Text(
+              'Your account has not been verified by an admin. Please contact the admin for verification.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Function ini digunakan untuk button login
-  login() async {}
+  login() async {
+    if (formKey.currentState!.validate()) {
+      var response = await db.login(
+        Users(
+          usrName: usernameController.text,
+          usrPassword: passwordController.text,
+          role: '', // Role will be fetched from the database
+        ),
+      );
+
+      if (response) {
+        var user = await db.getUsers(usernameController.text);
+        if (user != null) {
+          if (user.isVerified == 1) {
+            // Set role in the provider
+            Provider.of<UiProvider>(context, listen: false).setRole(user.role);
+
+            // Jika checklist remember me then setRememberMe is true
+            if (Provider.of<UiProvider>(context, listen: false).isChecked) {
+              Provider.of<UiProvider>(context, listen: false).setRememberMe();
+            }
+
+            // Jika login berhasil maka akan diarahkan ke halaman homepage
+            if (!mounted) return;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HomePage(),
+              ),
+            );
+
+            // Tampilkan Snackbar
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Login berhasil'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else {
+            // Show verification alert
+            _showVerificationAlert();
+          }
+        }
+      } else {
+        // Jika salah, akan memunculkan message "Username atau Password salah"
+        setState(() {
+          isLogin = true;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -182,48 +251,7 @@ class _LoginState extends State<Login> {
                             child,
                           ) {
                             return ElevatedButton(
-                              onPressed: () async {
-                                var response = await db.login(
-                                  Users(
-                                    usrName: usernameController.text,
-                                    usrPassword: passwordController.text,
-                                  ),
-                                );
-                                if (response == true) {
-                                  // Jika checklist remember me then setRememberMe is true
-                                  if (notifier.isChecked == true) {
-                                    notifier.setRememberMe();
-                                  }
-
-                                  // Jika login berhasil maka akan diarahkan ke halaman homepage
-                                  if (!mounted) return;
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const HomePage(),
-                                    ),
-                                  );
-
-                                  // Tampilkan Snackbar
-                                  if (response == true) {
-                                    // Jika login berhasil maka akan memunculkan message "Login berhasil"
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Login berhasil'),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                  } else {
-                                    // Jika login gagal maka tidak akan memunculkan message.
-                                    return null;
-                                  }
-                                } else {
-                                  // Jika salah, akan memunculkan message "Username atau Password salah"
-                                  setState(() {
-                                    isLogin = true;
-                                  });
-                                }
-                              },
+                              onPressed: login,
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(50),

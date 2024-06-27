@@ -14,6 +14,9 @@ class UiProvider extends ChangeNotifier {
   bool _darkMode = false;
   bool get darkMode => _darkMode;
 
+  String _role = '';
+  String get role => _role;
+
   late SharedPreferences storage;
 
   // Method to check and uncheck remember me
@@ -38,10 +41,18 @@ class UiProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  setRole(String role) {
+    _role = role;
+    storage.setString("role", role);
+    notifyListeners();
+  }
+
   logout(context) {
     // set rememberme value to false
     _rememberMe = false;
+    _role = '';
     storage.setBool("rememberMe", _rememberMe);
+    storage.remove("role");
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -56,6 +67,7 @@ class UiProvider extends ChangeNotifier {
     // get the value of remember me
     _rememberMe = storage.getBool("rememberMe") ?? false;
     _darkMode = storage.getBool("darkMode") ?? false;
+    _role = storage.getString("role") ?? '';
     notifyListeners();
   }
 }

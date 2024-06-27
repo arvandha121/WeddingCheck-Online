@@ -26,6 +26,9 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       backgroundColor: Colors.deepPurple,
+      iconTheme: IconThemeData(
+        color: Colors.white, // Set the back arrow color to white
+      ),
       actions: [
         IconButton(
           icon: Icon(Icons.info),
