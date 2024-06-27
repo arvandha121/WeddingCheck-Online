@@ -88,8 +88,14 @@ class _EditsState extends State<Edits> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Item'),
+        title: Text(
+          'Edit Item',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the back arrow color to white
+        ),
       ),
       body: Padding(
         padding: EdgeInsets.all(20),
@@ -195,7 +201,7 @@ class _EditsState extends State<Edits> {
               ElevatedButton(
                 onPressed: updateListItem,
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.deepPurple,
+                  backgroundColor: Colors.deepPurple,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -203,7 +209,10 @@ class _EditsState extends State<Edits> {
                   textStyle:
                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                child: Text("Update"),
+                child: Text(
+                  "Update",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

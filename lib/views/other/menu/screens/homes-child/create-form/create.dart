@@ -87,8 +87,14 @@ class _CreateState extends State<Create> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Tambah Data"),
+        title: Text(
+          "Tambah Data",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the back arrow color to white
+        ),
       ),
       body: Padding(
         padding: EdgeInsets.all(20),
@@ -154,14 +160,17 @@ class _CreateState extends State<Create> {
               ElevatedButton(
                 onPressed: create,
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.deepPurple,
+                  backgroundColor: Colors.deepPurple,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   padding: EdgeInsets.symmetric(horizontal: 25, vertical: 20),
                   textStyle:
                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                child: Text("Submit"),
+                child: Text(
+                  "Submit",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

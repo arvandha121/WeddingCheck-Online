@@ -18,12 +18,18 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text("Wedding Check"),
+      title: Text(
+        "Wedding Check",
+        style: TextStyle(
+          color: Colors.white,
+        ),
+      ),
       backgroundColor: Colors.deepPurple,
       actions: [
         IconButton(
           icon: Icon(Icons.info),
           tooltip: 'Information',
+          color: Colors.white,
           onPressed: () {
             showDialog(
               context: context,
@@ -53,8 +59,8 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                         icon: Icon(Icons.download, color: Colors.white),
                         label: Text('Download Template'),
                         style: ElevatedButton.styleFrom(
-                          primary: Colors.deepPurple,
-                          onPrimary: Colors.white,
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.deepPurple,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),

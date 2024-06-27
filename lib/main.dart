@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_navigation/get_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:weddingcheck/app/provider/provider.dart';
 import 'package:weddingcheck/views/auth/loginscreen.dart';
 import 'package:weddingcheck/views/homepage.dart';
 import 'package:weddingcheck/views/splashscreen.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await requestPermissions();
   runApp(const MyApp());
+}
+
+Future<void> requestPermissions() async {
+  if (await Permission.storage.request().isGranted) {
+    // Izin diberikan
+  } else {
+    // Izin ditolak
+  }
+
+  if (await Permission.manageExternalStorage.request().isGranted) {
+    // Izin diberikan
+  } else {
+    // Izin ditolak
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -32,8 +48,8 @@ class MyApp extends StatelessWidget {
               primaryColor: Colors.blue,
               scaffoldBackgroundColor: Colors.white,
               textTheme: TextTheme(
-                bodyText1: TextStyle(color: Colors.black),
-                bodyText2: TextStyle(color: Colors.black),
+                bodyLarge: TextStyle(color: Colors.black),
+                bodyMedium: TextStyle(color: Colors.black),
               ),
             ),
             darkTheme: ThemeData(
@@ -42,8 +58,8 @@ class MyApp extends StatelessWidget {
               primaryColor: Colors.blueGrey,
               scaffoldBackgroundColor: Colors.black,
               textTheme: TextTheme(
-                bodyText1: TextStyle(color: Colors.white),
-                bodyText2: TextStyle(color: Colors.white),
+                bodyLarge: TextStyle(color: Colors.white),
+                bodyMedium: TextStyle(color: Colors.white),
               ),
             ),
             themeMode: notifier.darkMode ? ThemeMode.dark : ThemeMode.light,

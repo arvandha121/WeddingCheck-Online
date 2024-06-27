@@ -62,7 +62,7 @@ class _DetailState extends State<Detail> {
                     infoSection(Icons.phone, "No Hp", widget.item.nohp),
                     SizedBox(height: 20),
                     Center(
-                      child: QrImage(
+                      child: QrImageView(
                         data: widget.item.gambar,
                         version: QrVersions.auto,
                         size: 200.0,

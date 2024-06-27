@@ -79,8 +79,14 @@ class _AllInvitationsPageState extends State<AllInvitationsPage> {
     Color textColor = isDarkModes ? Colors.black : Colors.black;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Undangan Pernikahan'),
+        title: Text(
+          'Undangan Pernikahan',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the back arrow color to white
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.download),
@@ -156,7 +162,7 @@ class _AllInvitationsPageState extends State<AllInvitationsPage> {
                     ),
                   ),
                   SizedBox(height: 12),
-                  QrImage(
+                  QrImageView(
                     data: item.gambar,
                     version: QrVersions.auto,
                     size: 165.0,

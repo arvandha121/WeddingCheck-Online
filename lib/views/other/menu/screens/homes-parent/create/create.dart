@@ -126,8 +126,14 @@ class _CreateParentState extends State<CreateParent> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Create Files"),
+        title: Text(
+          "Create Files",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the back arrow color to white
+        ),
       ),
       body: Padding(
         padding: EdgeInsets.all(20),
@@ -216,7 +222,10 @@ class _CreateParentState extends State<CreateParent> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                child: Text("Create"),
+                child: Text(
+                  "Create",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

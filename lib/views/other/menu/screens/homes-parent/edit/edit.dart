@@ -139,8 +139,14 @@ class _EditParentsState extends State<EditParents> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Edit Files"),
+        title: Text(
+          "Edit Files",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the back arrow color to white
+        ),
       ),
       body: Padding(
         padding: EdgeInsets.all(20),
@@ -214,7 +220,7 @@ class _EditParentsState extends State<EditParents> {
               ElevatedButton(
                 onPressed: updateParentListItem,
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.deepPurple,
+                  backgroundColor: Colors.deepPurple,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -227,7 +233,10 @@ class _EditParentsState extends State<EditParents> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                child: Text("Update"),
+                child: Text(
+                  "Update",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

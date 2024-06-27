@@ -84,8 +84,14 @@ class _HomesChildState extends State<HomesChild> {
     Color textColor = isDarkMode ? Colors.white : Colors.black;
     return Scaffold(
       appBar: AppBar(
-        title: Text("List Tamu"),
+        title: Text(
+          "List Tamu",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the back arrow color to white
+        ),
         actions: [
           PopupMenuButton<String>(
             icon: Icon(Icons.more_vert),

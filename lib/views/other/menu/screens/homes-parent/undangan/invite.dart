@@ -86,8 +86,14 @@ class _InvitationPageState extends State<InvitationPage> {
     Color qrForegroundColor = isDarkModes ? Colors.white : Colors.black;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Undangan Pernikahan'),
+        title: Text(
+          'Undangan Pernikahan',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the back arrow color to white
+        ),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -116,8 +122,8 @@ class _InvitationPageState extends State<InvitationPage> {
                                     onPressed: _downloadInvitation,
                                     child: Text('Unduh Undangan'),
                                     style: ElevatedButton.styleFrom(
-                                      primary: Colors.deepPurple,
-                                      onPrimary: Colors.white,
+                                      foregroundColor: Colors.white,
+                                      backgroundColor: Colors.deepPurple,
                                     ),
                                   ),
                                 ),
@@ -135,32 +141,35 @@ class _InvitationPageState extends State<InvitationPage> {
                                   height: 50,
                                   child: ElevatedButton(
                                     onPressed: _shareInvitation,
-                                    child: Text('Bagikan Undangan'),
+                                    child: Text(
+                                      'Bagikan Undangan',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                     style: ElevatedButton.styleFrom(
-                                      primary: Colors.deepPurple,
+                                      backgroundColor: Colors.deepPurple,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 10),
-                                if (_listItem.nohp != "-")
-                                  Container(
-                                    width: double.infinity,
-                                    height: 50,
-                                    child: ElevatedButton(
-                                      onPressed: _shareViaWhatsApp,
-                                      child: Text('Kirim via WhatsApp'),
-                                      style: ElevatedButton.styleFrom(
-                                        primary: Colors.green,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                // SizedBox(height: 10),
+                                // if (_listItem.nohp != "-")
+                                //   Container(
+                                //     width: double.infinity,
+                                //     height: 50,
+                                //     child: ElevatedButton(
+                                //       onPressed: _shareViaWhatsApp,
+                                //       child: Text('Kirim via WhatsApp'),
+                                //       style: ElevatedButton.styleFrom(
+                                //         backgroundColor: Colors.green,
+                                //         shape: RoundedRectangleBorder(
+                                //           borderRadius:
+                                //               BorderRadius.circular(8),
+                                //         ),
+                                //       ),
+                                //     ),
+                                //   ),
                               ],
                             )
                       : Container(),
@@ -172,7 +181,7 @@ class _InvitationPageState extends State<InvitationPage> {
 
   Widget _buildFormatSelector() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -258,7 +267,7 @@ class _InvitationPageState extends State<InvitationPage> {
                       ),
                     ),
                     SizedBox(height: 12),
-                    QrImage(
+                    QrImageView(
                       data: _listItem.gambar,
                       version: QrVersions.auto,
                       size: 165.0,
@@ -334,7 +343,7 @@ class _InvitationPageState extends State<InvitationPage> {
                       ),
                     ),
                     SizedBox(height: 12),
-                    QrImage(
+                    QrImageView(
                       data: _listItem.gambar,
                       version: QrVersions.auto,
                       size: 180.0,
