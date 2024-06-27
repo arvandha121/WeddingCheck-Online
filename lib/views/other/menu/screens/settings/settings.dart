@@ -307,7 +307,7 @@ class _SettingsState extends State<Settings> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            const Divider(),
+            SizedBox(height: 8), // Replaced Divider with SizedBox
             ListTile(
               leading: Icon(
                 Icons.exit_to_app,
