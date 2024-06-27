@@ -37,7 +37,7 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     Color textColor = isDarkMode ? Colors.black : Colors.white;
-    Color fillColor = isDarkMode ? Colors.blue : Colors.blue;
+    Color fillColor = isDarkMode ? Colors.grey : Colors.grey;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Container(
