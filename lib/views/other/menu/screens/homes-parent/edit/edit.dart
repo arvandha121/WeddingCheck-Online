@@ -75,6 +75,37 @@ class _EditParentsState extends State<EditParents> {
     }
   }
 
+  Future<void> _selectResepsiDate(
+      BuildContext context, TextEditingController controller) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(), // Restrict to current date and future dates
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      final DateTime tanggal =
+          DateFormat('dd-MM-yyyy').parse(tanggalController.text);
+      if (picked.isBefore(tanggal) || picked.isAtSameMomentAs(tanggal)) {
+        Get.snackbar(
+          "Error", // title
+          "Tanggal resepsi tidak boleh sebelum atau pada tanggal yang sama", // message
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          borderRadius: 20,
+          margin: EdgeInsets.all(10),
+          snackStyle: SnackStyle.FLOATING,
+          duration: Duration(seconds: 3), // Duration the Snackbar is visible
+        );
+      } else {
+        setState(() {
+          controller.text = DateFormat('dd-MM-yyyy').format(picked);
+        });
+      }
+    }
+  }
+
   Future<void> _selectTime(
       BuildContext context, TextEditingController controller) async {
     final TimeOfDay? startTime = await showTimePicker(
@@ -272,6 +303,9 @@ class _EditParentsState extends State<EditParents> {
                       onChanged: (bool value) {
                         setState(() {
                           isSameDayReception = value;
+                          if (value) {
+                            tanggalResepsiController.clear();
+                          }
                         });
                       },
                     ),
@@ -293,7 +327,7 @@ class _EditParentsState extends State<EditParents> {
                           ? "Tanggal resepsi tidak boleh kosong"
                           : null,
                       onTap: () =>
-                          _selectDate(context, tanggalResepsiController),
+                          _selectResepsiDate(context, tanggalResepsiController),
                       readOnly: true,
                     ),
                     SizedBox(height: 20),
