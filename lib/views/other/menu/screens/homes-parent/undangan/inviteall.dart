@@ -177,6 +177,13 @@ class _AllInvitationsPageState extends State<AllInvitationsPage> {
                 _formatDate(_parentItem!.tanggal), isDarkMode),
             _buildInfoRow(
                 Icons.access_time, "Akad", _parentItem!.akad, isDarkMode),
+            SizedBox(
+              height: 5,
+            ),
+            if (_parentItem!.tanggalResepsi != null &&
+                _parentItem!.tanggalResepsi != _parentItem!.tanggal)
+              _buildInfoRow(Icons.calendar_today, "Resepsi",
+                  _formatDate(_parentItem!.tanggalResepsi!), isDarkMode),
             _buildInfoRow(
                 Icons.access_time, "Resepsi", _parentItem!.resepsi, isDarkMode),
             _buildInfoRow(
