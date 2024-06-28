@@ -21,18 +21,23 @@ class _CreateParentState extends State<CreateParent> {
   final resepsiController = TextEditingController();
   final akadController = TextEditingController();
   final lokasiController = TextEditingController();
+  final tanggalResepsiController =
+      TextEditingController(); // New controller for reception date
 
   final DatabaseHelper listparent = DatabaseHelper();
+
+  bool isSameDayReception = true;
+  bool isResepsiSelesai = true; // New state variable
 
   Future<void> _selectDate(
       BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime.now(), // Restrict to current date and future dates
       lastDate: DateTime(2100),
     );
-    if (picked != null && picked != DateTime.now()) {
+    if (picked != null) {
       setState(() {
         controller.text = DateFormat('dd-MM-yyyy').format(picked);
       });
@@ -74,13 +79,34 @@ class _CreateParentState extends State<CreateParent> {
       initialTime: TimeOfDay.now(),
       helpText: 'Waktu Mulai',
     );
-    if (startTime != null) {
+    if (startTime == null) return; // User cancelled the picker
+
+    if (isResepsiSelesai) {
       final now = DateTime.now();
       final startDateTime = DateTime(
           now.year, now.month, now.day, startTime.hour, startTime.minute);
+
       setState(() {
         controller.text =
             '${DateFormat('HH:mm').format(startDateTime)} - Selesai';
+      });
+    } else {
+      final TimeOfDay? endTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        helpText: 'Waktu Selesai',
+      );
+      if (endTime == null) return; // User cancelled the picker
+
+      final now = DateTime.now();
+      final startDateTime = DateTime(
+          now.year, now.month, now.day, startTime.hour, startTime.minute);
+      final endDateTime =
+          DateTime(now.year, now.month, now.day, endTime.hour, endTime.minute);
+
+      setState(() {
+        controller.text =
+            '${DateFormat('HH:mm').format(startDateTime)} - ${DateFormat('HH:mm').format(endDateTime)}';
       });
     }
   }
@@ -97,6 +123,9 @@ class _CreateParentState extends State<CreateParent> {
             resepsi: resepsiController.text,
             akad: akadController.text,
             lokasi: lokasiController.text,
+            tanggalResepsi: isSameDayReception
+                ? tanggalController.text
+                : tanggalResepsiController.text, // Set the reception date
           ),
         );
         Navigator.pushReplacement(
@@ -187,7 +216,56 @@ class _CreateParentState extends State<CreateParent> {
                 onTap: () => _selectTime(context, akadController),
                 readOnly: true,
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Transform.scale(
+                    scale: 0.8, // Adjust the scale factor as needed
+                    child: Switch(
+                      value: isResepsiSelesai,
+                      onChanged: (bool value) {
+                        setState(() {
+                          isResepsiSelesai = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Text("Resepsi sampai selesai"),
+                ],
+              ),
+              Row(
+                children: [
+                  Transform.scale(
+                    scale: 0.8, // Adjust the scale factor as needed
+                    child: Switch(
+                      value: isSameDayReception,
+                      onChanged: (bool value) {
+                        setState(() {
+                          isSameDayReception = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Text("Resepsi tanggal yang sama"),
+                ],
+              ),
+              if (!isSameDayReception)
+                Column(
+                  children: [
+                    _buildTextField(
+                      controller: tanggalResepsiController,
+                      labelText: "Tanggal Resepsi",
+                      icon: Icons.calendar_today,
+                      validator: (value) => value!.isEmpty
+                          ? "Tanggal resepsi tidak boleh kosong"
+                          : null,
+                      onTap: () =>
+                          _selectDate(context, tanggalResepsiController),
+                      readOnly: true,
+                    ),
+                    SizedBox(height: 20),
+                  ],
+                ),
               _buildTextField(
                 controller: resepsiController,
                 labelText: "Resepsi (Jam Mulai - Selesai)",
@@ -251,6 +329,7 @@ class _CreateParentState extends State<CreateParent> {
         ),
         prefixIcon: Icon(icon),
         filled: true,
+        fillColor: Colors.grey[200],
       ),
       validator: validator,
       onTap: onTap,

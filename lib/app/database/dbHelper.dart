@@ -76,7 +76,8 @@ class DatabaseHelper {
         tanggal TEXT NOT NULL,
         akad TEXT NOT NULL,
         resepsi TEXT NOT NULL,
-        lokasi TEXT NOT NULL
+        lokasi TEXT NOT NULL,
+        tanggalResepsi TEXT
       );
     ''');
   }

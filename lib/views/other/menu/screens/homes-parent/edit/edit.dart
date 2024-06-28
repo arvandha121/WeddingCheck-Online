@@ -28,8 +28,13 @@ class _EditParentsState extends State<EditParents> {
   late TextEditingController resepsiController;
   late TextEditingController akadController;
   late TextEditingController lokasiController;
+  late TextEditingController
+      tanggalResepsiController; // New controller for tanggal_resepsi
 
   final DatabaseHelper dbHelper = DatabaseHelper();
+
+  bool isSameDayReception = true;
+  bool isResepsiSelesai = true; // New state variable
 
   @override
   void initState() {
@@ -41,6 +46,18 @@ class _EditParentsState extends State<EditParents> {
     resepsiController = TextEditingController(text: widget.item.resepsi);
     akadController = TextEditingController(text: widget.item.akad);
     lokasiController = TextEditingController(text: widget.item.lokasi);
+    tanggalResepsiController =
+        TextEditingController(text: widget.item.tanggalResepsi ?? '');
+
+    // Initialize the state of the resepsi switch based on the resepsiController text
+    if (resepsiController.text.contains('Selesai')) {
+      isResepsiSelesai = true;
+    } else {
+      isResepsiSelesai = false;
+    }
+
+    // Set the initial state of the isSameDayReception switch
+    isSameDayReception = tanggalResepsiController.text.isEmpty;
   }
 
   Future<void> _selectDate(
@@ -48,11 +65,13 @@ class _EditParentsState extends State<EditParents> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime.now(), // Restrict to current date and future dates
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      controller.text = DateFormat('dd-MM-yyyy').format(picked);
+      setState(() {
+        controller.text = DateFormat('dd-MM-yyyy').format(picked);
+      });
     }
   }
 
@@ -91,13 +110,34 @@ class _EditParentsState extends State<EditParents> {
       initialTime: TimeOfDay.now(),
       helpText: 'Waktu Mulai',
     );
-    if (startTime != null) {
+    if (startTime == null) return; // User cancelled the picker
+
+    if (isResepsiSelesai) {
       final now = DateTime.now();
       final startDateTime = DateTime(
           now.year, now.month, now.day, startTime.hour, startTime.minute);
+
       setState(() {
         controller.text =
             '${DateFormat('HH:mm').format(startDateTime)} - Selesai';
+      });
+    } else {
+      final TimeOfDay? endTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        helpText: 'Waktu Selesai',
+      );
+      if (endTime == null) return; // User cancelled the picker
+
+      final now = DateTime.now();
+      final startDateTime = DateTime(
+          now.year, now.month, now.day, startTime.hour, startTime.minute);
+      final endDateTime =
+          DateTime(now.year, now.month, now.day, endTime.hour, endTime.minute);
+
+      setState(() {
+        controller.text =
+            '${DateFormat('HH:mm').format(startDateTime)} - ${DateFormat('HH:mm').format(endDateTime)}';
       });
     }
   }
@@ -114,6 +154,8 @@ class _EditParentsState extends State<EditParents> {
         resepsi: resepsiController.text,
         akad: akadController.text,
         lokasi: lokasiController.text,
+        tanggalResepsi:
+            isSameDayReception ? null : tanggalResepsiController.text,
       );
       await dbHelper.updateParentListItem(updatedItem);
 
@@ -198,7 +240,65 @@ class _EditParentsState extends State<EditParents> {
                 onTap: () => _selectTime(context, akadController),
                 readOnly: true,
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Transform.scale(
+                    scale: 0.8, // Adjust the scale factor as needed
+                    child: Switch(
+                      value: isResepsiSelesai,
+                      onChanged: (bool value) {
+                        setState(() {
+                          isResepsiSelesai = value;
+                          if (value) {
+                            resepsiController.text =
+                                '${resepsiController.text.split(' - ')[0]} - Selesai';
+                          } else {
+                            resepsiController.text = '';
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  Text("Resepsi sampai selesai"),
+                ],
+              ),
+              Row(
+                children: [
+                  Transform.scale(
+                    scale: 0.8, // Adjust the scale factor as needed
+                    child: Switch(
+                      value: isSameDayReception,
+                      onChanged: (bool value) {
+                        setState(() {
+                          isSameDayReception = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Text("Resepsi pada tanggal yang sama"),
+                ],
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              if (!isSameDayReception)
+                Column(
+                  children: [
+                    _buildTextField(
+                      controller: tanggalResepsiController,
+                      labelText: "Tanggal Resepsi",
+                      icon: Icons.calendar_today,
+                      validator: (value) => value!.isEmpty
+                          ? "Tanggal resepsi tidak boleh kosong"
+                          : null,
+                      onTap: () =>
+                          _selectDate(context, tanggalResepsiController),
+                      readOnly: true,
+                    ),
+                    SizedBox(height: 20),
+                  ],
+                ),
               _buildTextField(
                 controller: resepsiController,
                 labelText: "Resepsi (Jam Mulai - Selesai)",

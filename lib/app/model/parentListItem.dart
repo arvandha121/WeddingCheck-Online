@@ -7,6 +7,7 @@ class ParentListItem {
   String akad;
   String resepsi;
   String lokasi;
+  String? tanggalResepsi;
 
   ParentListItem({
     this.id,
@@ -17,6 +18,7 @@ class ParentListItem {
     required this.akad,
     required this.resepsi,
     required this.lokasi,
+    this.tanggalResepsi,
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +31,7 @@ class ParentListItem {
       'akad': akad,
       'resepsi': resepsi,
       'lokasi': lokasi,
+      'tanggalResepsi': tanggalResepsi,
     };
   }
 
@@ -42,6 +45,7 @@ class ParentListItem {
       akad: map['akad'],
       resepsi: map['resepsi'],
       lokasi: map['lokasi'],
+      tanggalResepsi: map['tanggalResepsi'],
     );
   }
 }
