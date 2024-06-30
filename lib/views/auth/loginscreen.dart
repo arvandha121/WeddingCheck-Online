@@ -20,6 +20,7 @@ class _LoginState extends State<Login> {
   bool isChecked = false;
   bool isHidden = true;
   bool isLogin = false; // Digunakan untuk login
+  String loginErrorMessage = ""; // Pesan kesalahan login
 
   // textediting controller untuk control text ketika di input
   final usernameController = TextEditingController();
@@ -30,14 +31,13 @@ class _LoginState extends State<Login> {
 
   final db = DatabaseHelper();
 
-  void _showVerificationAlert() {
+  void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Verification Required'),
-          content: Text(
-              'Your account has not been verified by an admin. Please contact the admin for verification.'),
+          title: Text('Login Error'),
+          content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -49,54 +49,77 @@ class _LoginState extends State<Login> {
     );
   }
 
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Login Successful'),
+          content: Text('Login berhasil'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HomePage(),
+                  ),
+                );
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Function ini digunakan untuk button login
   login() async {
     if (formKey.currentState!.validate()) {
-      var response = await db.login(
+      var user = await db.login(
         Users(
           usrName: usernameController.text,
           usrPassword: passwordController.text,
-          role: '', // Role will be fetched from the database
+          role: '',
         ),
       );
 
-      if (response) {
-        var user = await db.getUsers(usernameController.text);
-        if (user != null) {
-          if (user.isVerified == 1) {
-            // Set role in the provider
-            Provider.of<UiProvider>(context, listen: false).setRole(user.role);
+      if (user != null) {
+        if (user.isVerified == 1) {
+          Provider.of<UiProvider>(context, listen: false).setRole(user.role);
 
-            // Jika checklist remember me then setRememberMe is true
-            if (Provider.of<UiProvider>(context, listen: false).isChecked) {
-              Provider.of<UiProvider>(context, listen: false).setRememberMe();
-            }
-
-            // Jika login berhasil maka akan diarahkan ke halaman homepage
-            if (!mounted) return;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const HomePage(),
-              ),
-            );
-
-            // Tampilkan Snackbar
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Login berhasil'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          } else {
-            // Show verification alert
-            _showVerificationAlert();
+          // Jika checklist remember me then setRememberMe is true
+          if (Provider.of<UiProvider>(context, listen: false).isChecked) {
+            Provider.of<UiProvider>(context, listen: false).setRememberMe();
           }
+
+          // Jika login berhasil maka akan menampilkan dialog sukses
+          setState(() {
+            _showSuccessDialog();
+          });
+        } else {
+          setState(() {
+            if (user.role == 'pegawai') {
+              // Set error message for pegawai
+              loginErrorMessage =
+                  'Akun anda belum diverifikasi. Silakan hubungi admin.';
+            } else {
+              // Set general error message
+              loginErrorMessage =
+                  'Your account has not been verified by an admin. Please contact the admin for verification.';
+            }
+            isLogin = true;
+            _showErrorDialog(loginErrorMessage);
+          });
         }
       } else {
         // Jika salah, akan memunculkan message "Username atau Password salah"
         setState(() {
+          loginErrorMessage = "Username atau Password salah";
           isLogin = true;
+          _showErrorDialog(loginErrorMessage);
         });
       }
     }
@@ -305,12 +328,7 @@ class _LoginState extends State<Login> {
                       ),
 
                       // Digunakan untuk mentriger user dan password ketika salah masukkan users
-                      isLogin
-                          ? const Text(
-                              "Username atau Password salah",
-                              style: TextStyle(color: Colors.red),
-                            )
-                          : const SizedBox(),
+                      isLogin ? const SizedBox() : const SizedBox(),
                     ],
                   ),
                 ),

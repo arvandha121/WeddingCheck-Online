@@ -83,13 +83,18 @@ class DatabaseHelper {
   }
 
   // User-related operations
-  Future<bool> login(Users user) async {
+  Future<Users?> login(Users user) async {
     final db = await database;
     var result = await db.rawQuery(
-      "SELECT * FROM users WHERE usrName = '${user.usrName}' AND usrPassword = '${user.usrPassword}' AND isVerified = 1",
+      "SELECT * FROM users WHERE usrName = ? AND usrPassword = ?",
+      [user.usrName, user.usrPassword],
     );
 
-    return result.isNotEmpty;
+    if (result.isNotEmpty) {
+      return Users.fromMap(result.first);
+    } else {
+      return null;
+    }
   }
 
   Future<int> register(Users user) async {
