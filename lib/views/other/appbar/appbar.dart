@@ -6,7 +6,9 @@ import 'package:flutter/services.dart'; // Import the services package for clipb
 import 'package:weddingcheck/app/provider/provider.dart';
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
-  MyAppBar({Key? key}) : super(key: key);
+  final String role;
+
+  MyAppBar({Key? key, required this.role}) : super(key: key);
 
   final Uri url = Uri.parse('https://excelexample.arvandhaa.my.id');
 
@@ -30,65 +32,66 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
         color: Colors.white, // Set the back arrow color to white
       ),
       actions: [
-        IconButton(
-          icon: Icon(Icons.info),
-          tooltip: 'Information',
-          color: Colors.white,
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  title: Text(
-                    "Template Import Excel",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+        if (role == 'admin')
+          IconButton(
+            icon: Icon(Icons.info),
+            tooltip: 'Information',
+            color: Colors.white,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        "Klik button di bawah untuk mengunduh template excel list tamu",
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
+                    title: Text(
+                      "Template Import Excel",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
-                      SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.download, color: Colors.white),
-                        label: Text('Download Template'),
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.deepPurple,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      textAlign: TextAlign.center,
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          "Klik button di bawah untuk mengunduh template excel list tamu",
+                          style: TextStyle(
+                            fontSize: 16,
                           ),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        onPressed: () async {
-                          _launchUrl();
-                        },
-                      ),
-                      SizedBox(height: 10), // Add some spacing
-                      CopyUrlButton(url: url),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
+                        SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          icon: Icon(Icons.download, color: Colors.white),
+                          label: Text('Download Template'),
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.deepPurple,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                          ),
+                          onPressed: () async {
+                            _launchUrl();
+                          },
+                        ),
+                        SizedBox(height: 10), // Add some spacing
+                        CopyUrlButton(url: url),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
       ],
     );
   }

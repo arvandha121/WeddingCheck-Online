@@ -6,6 +6,10 @@ import 'package:weddingcheck/views/other/menu/screens/homes-parent/create/create
 import 'package:weddingcheck/views/other/menu/screens/homes-parent/edit/edit.dart';
 
 class HomesParent extends StatefulWidget {
+  final String role;
+
+  HomesParent({required this.role});
+
   @override
   State<HomesParent> createState() => _HomesParentState();
 }
@@ -216,14 +220,15 @@ class _HomesParentState extends State<HomesParent> {
                                     );
                                   },
                                 ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => _confirmDelete(
-                                    item.id!,
-                                    item.title,
-                                    textColor,
+                                if (widget.role == 'admin')
+                                  IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _confirmDelete(
+                                      item.id!,
+                                      item.title,
+                                      textColor,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                             onTap: () {
@@ -232,6 +237,7 @@ class _HomesParentState extends State<HomesParent> {
                                 MaterialPageRoute(
                                   builder: (context) => HomesChild(
                                     parentId: item.id!,
+                                    role: widget.role, // Pass the role here
                                   ),
                                 ),
                               );

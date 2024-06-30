@@ -13,8 +13,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomesChild extends StatefulWidget {
   final int parentId;
+  final String role;
 
-  HomesChild({required this.parentId});
+  HomesChild({required this.parentId, required this.role});
 
   @override
   State<HomesChild> createState() => _HomesChildState();
@@ -120,37 +121,44 @@ class _HomesChildState extends State<HomesChild> {
               Color iconColor = isDarkMode ? Colors.white : Colors.deepPurple;
               Color textColor = isDarkMode ? Colors.white : Colors.black;
 
-              return <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'import_excel',
-                  child: Row(
-                    children: [
-                      FaIcon(FontAwesomeIcons.fileImport,
-                          color: iconColor, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Import from Excel',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, color: textColor),
-                      ),
-                    ],
+              List<PopupMenuEntry<String>> menuItems = [];
+
+              if (widget.role == 'admin') {
+                menuItems.addAll([
+                  PopupMenuItem<String>(
+                    value: 'import_excel',
+                    child: Row(
+                      children: [
+                        FaIcon(FontAwesomeIcons.fileImport,
+                            color: iconColor, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Import from Excel',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: textColor),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'export_excel',
-                  child: Row(
-                    children: [
-                      FaIcon(FontAwesomeIcons.fileExport,
-                          color: iconColor, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Export to Excel',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, color: textColor),
-                      ),
-                    ],
+                  PopupMenuItem<String>(
+                    value: 'export_excel',
+                    child: Row(
+                      children: [
+                        FaIcon(FontAwesomeIcons.fileExport,
+                            color: iconColor, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Export to Excel',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: textColor),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ]);
+              }
+
+              menuItems.add(
                 PopupMenuItem<String>(
                   value: 'download_all',
                   child: Row(
@@ -166,7 +174,9 @@ class _HomesChildState extends State<HomesChild> {
                     ],
                   ),
                 ),
-              ];
+              );
+
+              return menuItems;
             },
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),

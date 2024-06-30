@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
 
     List<Widget> filteredWidgets = [
       Center(
-        child: HomesParent(),
+        child: HomesParent(role: role),
       ),
       Center(
         child: QRScanner(),
@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Scaffold(
-      appBar: MyAppBar(),
+      appBar: MyAppBar(role: role),
       body: filteredWidgets[selectedIndex],
       bottomNavigationBar: MyBottomNavBar(
         currentIndex: selectedIndex,
