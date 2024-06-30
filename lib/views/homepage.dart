@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
           child: Management(),
         ),
       Center(
-        child: Settings(),
+        child: Settings(role: role),
       ),
     ];
 

@@ -148,6 +148,7 @@ class _EditsState extends State<Edits> {
                 controller: nohpController,
                 labelText: "Nomor HP (boleh kosong)",
                 icon: Icons.phone,
+                keyboardType: TextInputType.phone,
                 onChanged: (value) {
                   if (!value.startsWith("+62")) {
                     nohpController.text = "+62";
@@ -227,6 +228,7 @@ class _EditsState extends State<Edits> {
     required IconData icon,
     String? Function(String?)? validator,
     void Function(String)? onChanged,
+    TextInputType? keyboardType,
   }) {
     return TextFormField(
       controller: controller,
@@ -240,6 +242,7 @@ class _EditsState extends State<Edits> {
       ),
       validator: validator ?? (value) => null,
       onChanged: onChanged,
+      keyboardType: keyboardType,
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:weddingcheck/app/database/dbHelper.dart';
@@ -147,6 +146,7 @@ class _CreateState extends State<Create> {
                 controller: nohpController,
                 labelText: "Nomor HP (boleh kosong)",
                 icon: Icons.phone,
+                keyboardType: TextInputType.phone,
                 onChanged: (value) {
                   if (!value.startsWith("+62")) {
                     nohpController.text = "+62";
@@ -185,6 +185,7 @@ class _CreateState extends State<Create> {
     required IconData icon,
     String? Function(String?)? validator,
     void Function(String)? onChanged,
+    TextInputType? keyboardType,
   }) {
     return TextFormField(
       controller: controller,
@@ -198,6 +199,7 @@ class _CreateState extends State<Create> {
       ),
       validator: validator ?? (value) => null,
       onChanged: onChanged,
+      keyboardType: keyboardType,
     );
   }
 }

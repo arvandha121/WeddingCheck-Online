@@ -6,7 +6,9 @@ import 'package:weddingcheck/app/provider/provider.dart';
 import 'package:weddingcheck/views/splashscreen.dart';
 
 class Settings extends StatefulWidget {
-  const Settings({super.key});
+  final String role;
+
+  Settings({required this.role});
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -280,6 +282,8 @@ class _SettingsState extends State<Settings> {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     Color textColor = isDarkMode ? Colors.white : Colors.black;
+    Color disabledColor = Colors.grey; // Color for disabled state
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -296,12 +300,25 @@ class _SettingsState extends State<Settings> {
             ListTile(
               leading: Icon(
                 Icons.delete_forever,
-                color: Colors.redAccent,
+                color:
+                    widget.role == 'pegawai' ? disabledColor : Colors.redAccent,
                 size: 40,
               ),
-              title: Text('Hapus List'),
-              subtitle: Text('Menghapus semua list tamu yang dipilih'),
-              onTap: () => _showDeleteConfirmationDialog(context, textColor),
+              title: Text(
+                'Hapus List',
+                style: TextStyle(
+                  color: widget.role == 'pegawai' ? disabledColor : textColor,
+                ),
+              ),
+              subtitle: Text(
+                'Menghapus semua list tamu yang dipilih',
+                style: TextStyle(
+                  color: widget.role == 'pegawai' ? disabledColor : textColor,
+                ),
+              ),
+              onTap: widget.role == 'pegawai'
+                  ? null
+                  : () => _showDeleteConfirmationDialog(context, textColor),
               tileColor: Theme.of(context).cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
