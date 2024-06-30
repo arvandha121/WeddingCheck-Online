@@ -1,4 +1,5 @@
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:weddingcheck/app/model/listItem.dart';
@@ -30,14 +31,27 @@ class DatabaseHelper {
   }
 
   Future _onCreate(Database db, int version) async {
+    // Create role table
+    await db.execute('''
+      CREATE TABLE role (
+        id_role INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama_role TEXT UNIQUE
+      );
+    ''');
+
+    // Insert default roles
+    await db.insert('role', {'nama_role': 'admin'});
+    await db.insert('role', {'nama_role': 'pegawai'});
+
     // Create users table users auth
     await db.execute('''
       CREATE TABLE users (
         usrId INTEGER PRIMARY KEY AUTOINCREMENT,
         usrName TEXT UNIQUE,
         usrPassword TEXT,
-        role TEXT,
-        isVerified INTEGER DEFAULT 0
+        id_role INTEGER,
+        isVerified INTEGER DEFAULT 0,
+        FOREIGN KEY (id_role) REFERENCES role(id_role)
       );
     ''');
 
@@ -45,9 +59,18 @@ class DatabaseHelper {
     await db.insert('users', {
       'usrName': 'admin',
       'usrPassword': 'password',
-      'role': 'admin',
+      'id_role': 1,
       'isVerified': 1,
     });
+
+    // Create management table
+    await db.execute('''
+      CREATE TABLE management (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_users INTEGER,
+        FOREIGN KEY (id_users) REFERENCES users(usrId)
+      );
+    ''');
 
     // Create list table children list (tamu)
     await db.execute('''
@@ -70,6 +93,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE parentlist (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_created INTEGER,
         title TEXT NOT NULL,
         namapria TEXT NOT NULL,
         namawanita TEXT NOT NULL,
@@ -77,7 +101,8 @@ class DatabaseHelper {
         akad TEXT NOT NULL,
         resepsi TEXT NOT NULL,
         lokasi TEXT NOT NULL,
-        tanggalResepsi TEXT
+        tanggalResepsi TEXT,
+        FOREIGN KEY (id_created) REFERENCES users(usrId)
       );
     ''');
   }
@@ -125,6 +150,32 @@ class DatabaseHelper {
     return result.map((map) => Users.fromMap(map)).toList();
   }
 
+  Future<Map<String, dynamic>?> getRoleById(int id_role) async {
+    final db = await database;
+    var result = await db.query(
+      'role',
+      where: 'id_role = ?',
+      whereArgs: [id_role],
+    );
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> getRoleByName(String roleName) async {
+    final db = await database;
+    var result = await db.query(
+      'role',
+      where: 'nama_role = ?',
+      whereArgs: [roleName],
+    );
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
+  }
+
   Future<int> updateUser(Users user) async {
     final db = await database;
     return db.update(
@@ -142,6 +193,46 @@ class DatabaseHelper {
       where: 'usrId = ?',
       whereArgs: [id],
     );
+  }
+
+  // Management-related operations
+  Future<int> insertManagement(int id_users) async {
+    final db = await database;
+    return db.insert('management', {'id_users': id_users});
+  }
+
+  Future<List<Map<String, dynamic>>> getAllManagement() async {
+    final db = await database;
+    final result = await db.query('management');
+    print('Management Data: $result'); // Tambahkan log ini
+    return result;
+  }
+
+  Future<int> deleteManagement(int id) async {
+    final db = await database;
+    return db.delete(
+      'management',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> copyUsersToManagement() async {
+    final db = await database;
+    // Ambil semua data dari tabel users
+    final users = await db.query('users');
+    // Hapus semua data yang ada di tabel management
+    await db.delete('management');
+    // Masukkan semua data dari tabel users ke tabel management
+    for (var user in users) {
+      await db.insert('management', {'id_users': user['usrId']});
+    }
+  }
+
+  Future<Users?> getUsersById(int usrId) async {
+    final db = await database;
+    var res = await db.query("users", where: "usrId = ?", whereArgs: [usrId]);
+    return res.isNotEmpty ? Users.fromMap(res.first) : null;
   }
 
   // List-related operations
@@ -269,6 +360,34 @@ class DatabaseHelper {
     return null;
   }
 
+  Future<int?> getCurrentUserId() async {
+    final db = await database;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? currentUserName =
+        prefs.getString('currentUserName'); // Replace with actual key
+
+    if (currentUserName == null) {
+      print("Current user name is null");
+      return null;
+    }
+
+    print("Current user name: $currentUserName");
+
+    var result = await db.query(
+      'users',
+      where: 'usrName = ?',
+      whereArgs: [currentUserName],
+    );
+
+    if (result.isNotEmpty) {
+      print("User ID found: ${result.first['usrId']}");
+      return result.first['usrId'] as int?;
+    } else {
+      print("No user found with username: $currentUserName");
+      return null;
+    }
+  }
+
   Future<int> insertParentListItem(ParentListItem parentListItem) async {
     final db = await database;
     return db.insert('parentlist', parentListItem.toMap());
@@ -331,8 +450,8 @@ class DatabaseHelper {
   Future<void> updateParentListItem(ParentListItem item) async {
     final db = await database;
     await db.update(
-      'parentlist', // Make sure this is the correct table name
-      item.toMap(), // Assuming you have a method to convert item to a map
+      'parentlist',
+      item.toMap(),
       where: 'id = ?',
       whereArgs: [item.id],
     );

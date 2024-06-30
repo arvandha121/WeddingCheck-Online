@@ -178,6 +178,7 @@ class _EditParentsState extends State<EditParents> {
       ParentListItem updatedItem = ParentListItem(
         id: widget
             .item.id, // Make sure to pass the ID if it's needed for updating
+        id_created: widget.item.id_created, // Add this line
         title: titleController.text,
         namapria: namapriaController.text,
         namawanita: namawanitaController.text,

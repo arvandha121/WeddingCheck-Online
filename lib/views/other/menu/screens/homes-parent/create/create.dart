@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weddingcheck/app/database/dbHelper.dart';
 import 'package:weddingcheck/app/model/parentListItem.dart';
 import 'package:weddingcheck/views/homepage.dart';
@@ -142,11 +143,20 @@ class _CreateParentState extends State<CreateParent> {
     }
   }
 
+  Future<int> getCurrentUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('usrId') ??
+        0; // Replace 'userId' with the actual key used to store the user ID
+  }
+
   void create() async {
     if (formKey.currentState!.validate()) {
       try {
+        int currentUserId = await getCurrentUserId();
+
         await listparent.insertParentListItem(
           ParentListItem(
+            id_created: currentUserId, // Add this line
             title: titleController.text,
             namapria: namapriaController.text,
             namawanita: namawanitaController.text,

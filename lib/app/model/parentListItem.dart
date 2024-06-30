@@ -1,5 +1,6 @@
 class ParentListItem {
   int? id;
+  int id_created;
   String title;
   String namapria;
   String namawanita;
@@ -11,6 +12,7 @@ class ParentListItem {
 
   ParentListItem({
     this.id,
+    required this.id_created,
     required this.title,
     required this.namapria,
     required this.namawanita,
@@ -24,6 +26,7 @@ class ParentListItem {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'id_created': id_created,
       'title': title,
       'namapria': namapria,
       'namawanita': namawanita,
@@ -38,6 +41,7 @@ class ParentListItem {
   factory ParentListItem.fromMap(Map<String, dynamic> map) {
     return ParentListItem(
       id: map['id'],
+      id_created: map['id_created'],
       title: map['title'],
       namapria: map['namapria'],
       namawanita: map['namawanita'],

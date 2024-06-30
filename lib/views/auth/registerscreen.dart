@@ -29,11 +29,17 @@ class _RegisterState extends State<Register> {
   register() async {
     if (formKey.currentState!.validate()) {
       try {
+        // Fetch the id_role for 'pegawai'
+        var roleResult = await db.getRoleByName('pegawai');
+        int id_role = roleResult != null
+            ? roleResult['id_role']
+            : 2; // Default to 2 if not found
+
         await db.register(
           Users(
             usrName: usernameController.text,
             usrPassword: passwordController.text,
-            role: 'pegawai', // Set role to 'pegawai'
+            id_role: id_role, // Set id_role to 'pegawai'
             isVerified: 0, // Set isVerified to 0 (not verified)
           ),
         );

@@ -82,13 +82,17 @@ class _LoginState extends State<Login> {
         Users(
           usrName: usernameController.text,
           usrPassword: passwordController.text,
-          role: '',
+          id_role: 0, // Placeholder, will be set after login
         ),
       );
 
       if (user != null) {
         if (user.isVerified == 1) {
-          Provider.of<UiProvider>(context, listen: false).setRole(user.role);
+          // Fetch role name from role table using id_role
+          var roleResult = await db.getRoleById(user.id_role);
+          String roleName = roleResult != null ? roleResult['nama_role'] : '';
+
+          Provider.of<UiProvider>(context, listen: false).setRole(roleName);
 
           // Jika checklist remember me then setRememberMe is true
           if (Provider.of<UiProvider>(context, listen: false).isChecked) {
@@ -101,7 +105,8 @@ class _LoginState extends State<Login> {
           });
         } else {
           setState(() {
-            if (user.role == 'pegawai') {
+            if (user.id_role == 2) {
+              // Assuming 'pegawai' role has id_role = 2
               // Set error message for pegawai
               loginErrorMessage =
                   'Akun anda belum diverifikasi. Silakan hubungi admin.';
