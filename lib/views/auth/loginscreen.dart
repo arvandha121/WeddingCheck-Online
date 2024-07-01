@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weddingcheck/app/database/dbHelper.dart';
-import 'package:weddingcheck/app/model/users.dart';
 import 'package:weddingcheck/app/provider/provider.dart';
 import 'package:weddingcheck/views/homepage.dart';
 import 'package:weddingcheck/views/auth/registerscreen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -17,7 +18,6 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   // digunakan untuk menampilkan dan menyembunyikan password
-  bool isChecked = false;
   bool isHidden = true;
   bool isLogin = false; // Digunakan untuk login
   String loginErrorMessage = ""; // Pesan kesalahan login
@@ -30,6 +30,86 @@ class _LoginState extends State<Login> {
   final formKey = GlobalKey<FormState>();
 
   final db = DatabaseHelper();
+
+  Future<void> login() async {
+    try {
+      final response = await http.post(
+        Uri.parse('${db.baseUrl}/login.php'),
+        body: {
+          'username': usernameController.text,
+          'password': passwordController.text,
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = _extractJson(response.body);
+
+        // Tambahkan log tambahan untuk memeriksa data yang diterima
+        print('Extracted data: $data');
+
+        if (data != null && data['success']) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          prefs.setString('username', usernameController.text);
+
+          // Jika pengguna belum diverifikasi, tampilkan pesan kesalahan
+          if (data['user']['isVerified'] == 0) {
+            _showErrorDialog(
+                'Akun Anda belum diverifikasi. Silakan hubungi admin.');
+            return;
+          }
+
+          // Jika checklist remember me then setRememberMe is true
+          if (Provider.of<UiProvider>(context, listen: false).isChecked) {
+            Provider.of<UiProvider>(context, listen: false).setRememberMe();
+          }
+
+          // Simpan peran pengguna berdasarkan id_role
+          int? idRole = data['user']['id_role'];
+          if (idRole != null) {
+            String role = await _getRoleNameById(idRole);
+            Provider.of<UiProvider>(context, listen: false).setRole(role);
+          } else {
+            throw Exception('id_role is null');
+          }
+
+          // Tampilkan dialog sukses
+          _showSuccessDialog();
+        } else {
+          _showErrorDialog(data != null ? data['message'] : 'Unknown error');
+        }
+      } else {
+        _showErrorDialog('Failed to connect to the server');
+      }
+    } catch (e) {
+      print('Error during login: $e');
+      _showErrorDialog('An error occurred during login');
+    }
+  }
+
+  Future<String> _getRoleNameById(int idRole) async {
+    final roleData = await db.getRoleById(idRole);
+    if (roleData != null && roleData['nama_role'] != null) {
+      return roleData['nama_role'];
+    } else {
+      throw Exception('Role not found for id_role: $idRole');
+    }
+  }
+
+  Map<String, dynamic>? _extractJson(String responseBody) {
+    try {
+      final jsonStartIndex = responseBody.indexOf('{');
+      if (jsonStartIndex != -1) {
+        final jsonString = responseBody.substring(jsonStartIndex);
+        return json.decode(jsonString);
+      }
+    } catch (e) {
+      print('Error extracting JSON: $e');
+    }
+    return null;
+  }
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -73,61 +153,6 @@ class _LoginState extends State<Login> {
         );
       },
     );
-  }
-
-  // Function ini digunakan untuk button login
-  login() async {
-    if (formKey.currentState!.validate()) {
-      var user = await db.login(
-        Users(
-          usrName: usernameController.text,
-          usrPassword: passwordController.text,
-          id_role: 0, // Placeholder, will be set after login
-        ),
-      );
-
-      if (user != null) {
-        if (user.isVerified == 1) {
-          // Fetch role name from role table using id_role
-          var roleResult = await db.getRoleById(user.id_role);
-          String roleName = roleResult != null ? roleResult['nama_role'] : '';
-
-          Provider.of<UiProvider>(context, listen: false).setRole(roleName);
-
-          // Jika checklist remember me then setRememberMe is true
-          if (Provider.of<UiProvider>(context, listen: false).isChecked) {
-            Provider.of<UiProvider>(context, listen: false).setRememberMe();
-          }
-
-          // Jika login berhasil maka akan menampilkan dialog sukses
-          setState(() {
-            _showSuccessDialog();
-          });
-        } else {
-          setState(() {
-            if (user.id_role == 2) {
-              // Assuming 'pegawai' role has id_role = 2
-              // Set error message for pegawai
-              loginErrorMessage =
-                  'Akun anda belum diverifikasi. Silakan hubungi admin.';
-            } else {
-              // Set general error message
-              loginErrorMessage =
-                  'Your account has not been verified by an admin. Please contact the admin for verification.';
-            }
-            isLogin = true;
-            _showErrorDialog(loginErrorMessage);
-          });
-        }
-      } else {
-        // Jika salah, akan memunculkan message "Username atau Password salah"
-        setState(() {
-          loginErrorMessage = "Username atau Password salah";
-          isLogin = true;
-          _showErrorDialog(loginErrorMessage);
-        });
-      }
-    }
   }
 
   @override
@@ -273,23 +298,21 @@ class _LoginState extends State<Login> {
                         child: SizedBox(
                           height: 50,
                           width: double.infinity,
-                          child: Consumer<UiProvider>(builder: (
-                            context,
-                            UiProvider notifier,
-                            child,
-                          ) {
-                            return ElevatedButton(
-                              onPressed: login,
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(50),
-                                ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (formKey.currentState!.validate()) {
+                                login();
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50),
                               ),
-                              child: Text(
-                                "Login",
-                              ),
-                            );
-                          }),
+                            ),
+                            child: Text(
+                              "Login",
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(

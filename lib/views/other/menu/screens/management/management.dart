@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weddingcheck/app/database/dbHelper.dart';
 import 'package:weddingcheck/app/model/users.dart';
 import 'package:weddingcheck/app/provider/provider.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class Management extends StatefulWidget {
   const Management({super.key});
@@ -12,58 +13,147 @@ class Management extends StatefulWidget {
 }
 
 class _ManagementState extends State<Management> {
-  List<Map<String, dynamic>> _management = [];
+  List<Users> _users = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _initializeData();
+    _fetchUsers();
   }
 
-  Future<void> _initializeData() async {
-    // Salin data dari tabel users ke tabel management
-    await DatabaseHelper().copyUsersToManagement();
-    // Ambil data dari tabel management
-    await _fetchManagement();
-  }
-
-  Future<void> _fetchManagement() async {
-    final management = await DatabaseHelper().getAllManagement();
-    print('Fetched Management Data: $management'); // Tambahkan log ini
+  Future<void> _fetchUsers() async {
     setState(() {
-      _management = management;
-      _isLoading = false;
+      _isLoading = true;
     });
-  }
 
-  void _addManagement(int id_users) async {
-    await DatabaseHelper().insertManagement(id_users);
-    _fetchManagement();
-  }
-
-  void _deleteManagement(int id) async {
-    if (id == 1) {
-      // Tidak boleh menghapus admin dengan id = 1
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Admin dengan id 1 tidak bisa dihapus.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+    try {
+      final response = await http.get(Uri.parse(
+          'https://fluttermysql.arvandhaa.my.id/sqlitemysqlsync/get_management.php'));
+      if (response.statusCode == 200) {
+        final cleanedResponseBody = _cleanResponseBody(response.body);
+        print('Cleaned Response Body: $cleanedResponseBody');
+        final data = json.decode(cleanedResponseBody);
+        if (mounted) {
+          setState(() {
+            _users = (data['users'] as List)
+                .map((json) => Users.fromMap(json))
+                .toList();
+            _isLoading = false;
+          });
+          print('Fetched Users: $_users');
+        }
+      } else {
+        throw Exception('Failed to load users');
+      }
+    } catch (e) {
+      print('Error fetching users: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-    await DatabaseHelper().deleteManagement(id);
-    _fetchManagement();
   }
 
-  void _verifyUser(int id, int isVerified) async {
-    await DatabaseHelper().updateUserVerification(id, isVerified);
-    _fetchManagement();
+  String _cleanResponseBody(String responseBody) {
+    final jsonStartIndex = responseBody.indexOf('{');
+    if (jsonStartIndex != -1) {
+      return responseBody.substring(jsonStartIndex);
+    }
+    return responseBody;
   }
 
-  void _editUser(Users user) {
-    _showUserDialog(user: user);
+  Future<void> _addUserToManagement(int usrId) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://fluttermysql.arvandhaa.my.id/sqlitemysqlsync/add_management.php'),
+        body: {
+          'id_users': usrId.toString(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final cleanedResponseBody = _cleanResponseBody(response.body);
+        final data = json.decode(cleanedResponseBody);
+        if (data['success']) {
+          _fetchUsers();
+        } else {
+          throw Exception(data['message']);
+        }
+      } else {
+        throw Exception('Failed to add user to management');
+      }
+    } catch (e) {
+      print('Error adding user to management: $e');
+    }
+  }
+
+  Future<void> _updateUser(Users user) async {
+    try {
+      print(
+          'Updating user: ${user.toMap()}'); // Log data user yang akan diupdate
+      final response = await http.post(
+        Uri.parse(
+            'https://fluttermysql.arvandhaa.my.id/sqlitemysqlsync/update_management.php'),
+        body: {
+          'id': user.usrId.toString(),
+          'id_users': user.usrId.toString(),
+          'usrName': user.usrName,
+          'usrPassword': user.usrPassword,
+          'id_role': user.id_role.toString(),
+          'isVerified': user.isVerified.toString(),
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final cleanedResponseBody = _cleanResponseBody(response.body);
+        final data = json.decode(cleanedResponseBody);
+        if (data['success']) {
+          setState(() {
+            _fetchUsers();
+          });
+        } else {
+          throw Exception(data['message']);
+        }
+      } else {
+        throw Exception('Failed to update user');
+      }
+    } catch (e) {
+      print('Error updating user: $e');
+    }
+  }
+
+  Future<void> _deleteUser(int id) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://fluttermysql.arvandhaa.my.id/sqlitemysqlsync/delete_management.php'),
+        body: {
+          'id': id.toString(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final cleanedResponseBody = _cleanResponseBody(response.body);
+        final data = json.decode(cleanedResponseBody);
+        if (data['success']) {
+          setState(() {
+            _fetchUsers();
+          });
+        } else {
+          throw Exception(data['message']);
+        }
+      } else {
+        throw Exception('Failed to delete user');
+      }
+    } catch (e) {
+      print('Error deleting user: $e');
+    }
   }
 
   void _showUserDialog({Users? user}) {
@@ -147,13 +237,18 @@ class _ManagementState extends State<Management> {
                   isVerified: isVerified ? 1 : 0,
                 );
 
+                print(
+                    'New user data: ${newUser.toMap()}'); // Log data user baru
+
                 if (isEditing) {
-                  await DatabaseHelper().updateUser(newUser);
+                  await _updateUser(newUser);
                 } else {
-                  await DatabaseHelper().register(newUser);
+                  final addedUser = await _addUser(newUser);
+                  if (addedUser != null) {
+                    await _addUserToManagement(addedUser.usrId!);
+                  }
                 }
 
-                _fetchManagement();
                 Navigator.of(context).pop();
               },
               child: Text(isEditing ? 'Update' : 'Add'),
@@ -164,9 +259,41 @@ class _ManagementState extends State<Management> {
     );
   }
 
+  Future<Users?> _addUser(Users user) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://fluttermysql.arvandhaa.my.id/sqlitemysqlsync/add_user.php'),
+        body: {
+          'usrName': user.usrName,
+          'usrPassword': user.usrPassword,
+          'id_role': user.id_role.toString(),
+          'isVerified': user.isVerified.toString(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final cleanedResponseBody = _cleanResponseBody(response.body);
+        final data = json.decode(cleanedResponseBody);
+        if (data['success']) {
+          return Users.fromMap(data['user']);
+        } else {
+          throw Exception(data['message']);
+        }
+      } else {
+        throw Exception('Failed to add user');
+      }
+    } catch (e) {
+      print('Error adding user: $e');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final role = Provider.of<UiProvider>(context).role;
+
+    print('User Role: $role');
 
     if (role != 'admin') {
       return Scaffold(
@@ -179,88 +306,95 @@ class _ManagementState extends State<Management> {
     return Scaffold(
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _management.length,
-              itemBuilder: (context, index) {
-                final management = _management[index];
-                return FutureBuilder<Users?>(
-                  future: DatabaseHelper().getUsersById(management['id_users']),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return ListTile(
-                        title: Text('Loading...'),
-                      );
-                    } else if (snapshot.hasError) {
-                      return ListTile(
-                        title: Text('Error: ${snapshot.error}'),
-                      );
-                    } else if (snapshot.hasData) {
-                      final user = snapshot.data!;
-                      return ListTile(
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 8.0),
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.blueAccent,
-                          child: Icon(Icons.person, color: Colors.white),
-                        ),
-                        title: Text(user.usrName,
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: FutureBuilder<Map<String, dynamic>?>(
-                          future: DatabaseHelper().getRoleById(user.id_role),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Text('Loading...');
-                            } else if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}');
-                            } else if (snapshot.hasData) {
-                              return Text(
-                                  'Role: ${snapshot.data!['nama_role']}');
-                            } else {
-                              return Text('Role: Unknown');
-                            }
-                          },
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (user.usrId != 1) ...[
-                              IconButton(
-                                icon: Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _editUser(user),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () =>
-                                    _deleteManagement(management['id']),
-                              ),
-                            ],
-                            if (user.id_role ==
-                                2) // Assuming 'pegawai' role has id_role = 2
-                              IconButton(
-                                icon: Icon(
-                                  user.isVerified == 1
-                                      ? Icons.check_box
-                                      : Icons.check_box_outline_blank,
-                                  color: user.isVerified == 1
-                                      ? Colors.green
-                                      : Colors.grey,
-                                ),
-                                onPressed: () => _verifyUser(
-                                    user.usrId!, user.isVerified == 1 ? 0 : 1),
-                              ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      return ListTile(
-                        title: Text('User not found'),
-                      );
-                    }
-                  },
-                );
-              },
+          : RefreshIndicator(
+              onRefresh: _fetchUsers,
+              child: ListView.builder(
+                itemCount: _users.length,
+                itemBuilder: (context, index) {
+                  final user = _users[index];
+                  return ListTile(
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.blueAccent,
+                      child: Icon(Icons.person, color: Colors.white),
+                    ),
+                    title: Text(user.usrName,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: FutureBuilder<Map<String, dynamic>?>(
+                      // FutureBuilder untuk mendapatkan nama peran
+                      future: _getRoleById(user.id_role),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Text('Loading...');
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else if (snapshot.hasData) {
+                          return Text('Role: ${snapshot.data!['nama_role']}');
+                        } else {
+                          return Text('Role: Unknown');
+                        }
+                      },
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (user.usrId != 1) ...[
+                          IconButton(
+                            icon: Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => _showUserDialog(user: user),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteUser(user.usrId!),
+                          ),
+                        ],
+                        if (user.id_role ==
+                            2) // Assuming 'pegawai' role has id_role = 2
+                          IconButton(
+                            icon: Icon(
+                              user.isVerified == 1
+                                  ? Icons.check_box
+                                  : Icons.check_box_outline_blank,
+                              color: user.isVerified == 1
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                            onPressed: () async {
+                              setState(() {
+                                user.isVerified = user.isVerified == 1 ? 0 : 1;
+                              });
+                              await _updateUser(user);
+                            },
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
     );
+  }
+
+  Future<Map<String, dynamic>?> _getRoleById(int id_role) async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://fluttermysql.arvandhaa.my.id/sqlitemysqlsync/get_role_by_id.php?id_role=$id_role'));
+      if (response.statusCode == 200) {
+        final cleanedResponseBody = _cleanResponseBody(response.body);
+        final data = json.decode(cleanedResponseBody);
+        if (data['success']) {
+          return data['role'];
+        } else {
+          throw Exception(data['message']);
+        }
+      } else {
+        throw Exception('Failed to load role');
+      }
+    } catch (e) {
+      print('Error fetching role: $e');
+      return null;
+    }
   }
 }

@@ -15,11 +15,12 @@ class Users {
 
   factory Users.fromMap(Map<String, dynamic> map) {
     return Users(
-      usrId: map['usrId'],
-      usrName: map['usrName'],
-      usrPassword: map['usrPassword'],
-      id_role: map['id_role'],
-      isVerified: map['isVerified'],
+      usrId:
+          map['usrId'] != null ? int.tryParse(map['usrId'].toString()) : null,
+      usrName: map['usrName'] ?? '',
+      usrPassword: map['usrPassword'] ?? '',
+      id_role: int.tryParse(map['id_role'].toString()) ?? 0,
+      isVerified: int.tryParse(map['isVerified'].toString()) ?? 0,
     );
   }
 

@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:weddingcheck/app/database/dbHelper.dart';
 import 'package:weddingcheck/app/model/users.dart';
 import 'package:weddingcheck/views/auth/loginscreen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -26,7 +28,7 @@ class _RegisterState extends State<Register> {
 
   final db = DatabaseHelper();
 
-  register() async {
+  Future<void> register() async {
     if (formKey.currentState!.validate()) {
       try {
         // Fetch the id_role for 'pegawai'
@@ -35,33 +37,91 @@ class _RegisterState extends State<Register> {
             ? roleResult['id_role']
             : 2; // Default to 2 if not found
 
-        await db.register(
-          Users(
-            usrName: usernameController.text,
-            usrPassword: passwordController.text,
-            id_role: id_role, // Set id_role to 'pegawai'
-            isVerified: 0, // Set isVerified to 0 (not verified)
-          ),
+        final response = await http.post(
+          Uri.parse('${db.baseUrl}/register.php'),
+          body: {
+            'usrName': usernameController.text,
+            'usrPassword': passwordController.text,
+            'id_role': id_role.toString(),
+          },
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Login(),
-          ),
-        );
-        Get.snackbar(
-          "Success",
-          "Account created successfully. Please wait for admin verification.",
-          snackPosition: SnackPosition.BOTTOM,
-        );
+
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+
+        if (response.statusCode == 200) {
+          final data = _extractJson(response.body);
+          if (data != null && data['success']) {
+            _showSuccessDialog();
+          } else {
+            _showErrorDialog(data != null ? data['message'] : 'Unknown error');
+          }
+        } else {
+          _showErrorDialog('Failed to connect to the server');
+        }
       } catch (e) {
-        Get.snackbar(
-          "Error",
-          "Failed to create account: $e",
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        print('Error during registration: $e');
+        _showErrorDialog('An error occurred during registration');
       }
     }
+  }
+
+  Map<String, dynamic>? _extractJson(String responseBody) {
+    try {
+      final jsonStartIndex = responseBody.indexOf('{');
+      if (jsonStartIndex != -1) {
+        final jsonString = responseBody.substring(jsonStartIndex);
+        return json.decode(jsonString);
+      }
+    } catch (e) {
+      print('Error extracting JSON: $e');
+    }
+    return null;
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Registration Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Registration Successful'),
+          content: Text(
+              'Account created successfully. Please wait for admin verification.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Login(),
+                  ),
+                );
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -223,13 +283,6 @@ class _RegisterState extends State<Register> {
                             onPressed: () {
                               if (formKey.currentState!.validate()) {
                                 register();
-                                Get.snackbar(
-                                  "Register",
-                                  "Berhasil membuat akun. Silakan tunggu verifikasi admin.",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: Colors.white,
-                                  colorText: Colors.black,
-                                );
                               }
                             },
                             style: ElevatedButton.styleFrom(

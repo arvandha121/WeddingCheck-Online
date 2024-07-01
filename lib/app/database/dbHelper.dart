@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -5,11 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:weddingcheck/app/model/listItem.dart';
 import 'package:weddingcheck/app/model/parentListItem.dart';
 import 'package:weddingcheck/app/model/users.dart';
+import 'package:http/http.dart' as http;
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
+
+  final String baseUrl = 'https://fluttermysql.arvandhaa.my.id/sqlitemysqlsync';
+  // final String baseUrl = "http://localhost/sqlitemysqlsync";
 
   static Database? _db;
 
@@ -108,24 +114,26 @@ class DatabaseHelper {
   }
 
   // User-related operations
-  Future<Users?> login(Users user) async {
-    final db = await database;
-    var result = await db.rawQuery(
-      "SELECT * FROM users WHERE usrName = ? AND usrPassword = ?",
-      [user.usrName, user.usrPassword],
-    );
 
-    if (result.isNotEmpty) {
-      return Users.fromMap(result.first);
-    } else {
-      return null;
-    }
-  }
+  // Future<Users?> login(Users user) async {
+  //   final db = await database;
+  //   var result = await db.rawQuery(
+  //     "SELECT * FROM users WHERE usrName = ? AND usrPassword = ?",
+  //     [user.usrName, user.usrPassword],
+  //   );
 
-  Future<int> register(Users user) async {
-    final db = await database;
-    return db.insert('users', user.toMap());
-  }
+  //   if (result.isNotEmpty) {
+  //     return Users.fromMap(result.first);
+  //   } else {
+  //     return null;
+  //   }
+  // }
+
+  // Register
+  // Future<int> register(Users user) async {
+  //   final db = await database;
+  //   return db.insert('users', user.toMap());
+  // }
 
   Future<Users?> getUsers(String usrName) async {
     final db = await database;
